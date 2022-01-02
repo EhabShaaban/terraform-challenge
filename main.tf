@@ -1,9 +1,9 @@
 # create terraform.tfvars with the following variables [access_key, secret_key, region, availability_zone]
 
 provider "aws" {
-  access_key        = var.access_key
-  secret_key        = var.secret_key
-  region            = var.region
+  access_key = var.access_key
+  secret_key = var.secret_key
+  region     = var.region
 }
 
 variable "access_key" {
@@ -53,6 +53,19 @@ resource "aws_instance" "server" {
     Name  = "challenge accepted"
     Owner = "infra"
   }
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = "stop-instance-bucket"
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket = aws_s3_bucket.bucket.id
+  key    = "stop_instances.py"
+  acl    = "private"
+  source = "/Users/ehab.shaaban/terraform-challenge/stop_instances.py"
+  etag   = filemd5("/Users/ehab.shaaban/terraform-challenge/stop_instances.py")
 }
 
 output "server_id" {
