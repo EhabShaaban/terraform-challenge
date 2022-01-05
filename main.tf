@@ -26,6 +26,11 @@ variable "availability_zone" {
   description = "server availability zone"
 }
 
+variable "HOME" {
+  type        = string
+  description = "project home dir"
+}
+
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -56,16 +61,82 @@ resource "aws_instance" "server" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "stop-instance-bucket"
+  bucket = "stop-instance"
   acl    = "private"
 }
 
 resource "aws_s3_bucket_object" "object" {
   bucket = aws_s3_bucket.bucket.id
-  key    = "stop_instances.py"
+  key    = "stop_instances.zip"
   acl    = "private"
-  source = "/Users/ehab.shaaban/terraform-challenge/stop_instances.py"
-  etag   = filemd5("/Users/ehab.shaaban/terraform-challenge/stop_instances.py")
+  source = join("/", [var.HOME, "stop_instances.zip"])
+  etag   = filemd5(join("/", [var.HOME, "stop_instances.zip"]))
+}
+
+resource "aws_lambda_function" "lambda" {
+  role          = aws_iam_role.role.arn
+  s3_bucket     = aws_s3_bucket.bucket.id
+  s3_key        = "stop_instances.zip"
+  function_name = "lambda-fn"
+  handler       = "stop_instances.lambda_handler"
+  runtime       = "python3.6"
+  timeout       = 180
+  depends_on = [
+    aws_s3_bucket.bucket,
+    aws_s3_bucket_object.object
+  ]
+}
+
+resource "aws_iam_policy" "policy" {
+  name        = "lambda_access-policy"
+  description = "IAM Policy"
+  policy      = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListAllMyBuckets",
+                "s3:GetBucketLocation"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": [
+                "arn:aws:s3:::*"
+            ]
+        }
+  ]
+}
+  EOF
+}
+
+resource "aws_iam_role" "role" {
+  name               = "role"
+  path               = "/"
+  assume_role_policy = <<EOF
+{
+"Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "iam-policy-attach" {
+  role       = aws_iam_role.role.name
+  policy_arn = aws_iam_policy.policy.arn
 }
 
 output "server_id" {
