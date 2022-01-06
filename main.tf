@@ -55,8 +55,9 @@ resource "aws_instance" "server" {
   key_name          = "tf-challenge"
 
   tags = {
-    Name  = "challenge accepted"
-    Owner = "infra"
+    Owner   = "infra"
+    Name    = "AutoStop"
+    Project = "challenge accepted"
   }
 }
 
@@ -67,16 +68,16 @@ resource "aws_s3_bucket" "bucket" {
 
 resource "aws_s3_bucket_object" "object" {
   bucket = aws_s3_bucket.bucket.id
-  key    = "stop_instances.zip"
+  key    = "stop_ec2.zip"
   acl    = "private"
-  source = join("/", [var.HOME, "stop_instances.zip"])
-  etag   = filemd5(join("/", [var.HOME, "stop_instances.zip"]))
+  source = join("/", [var.HOME, "stop_ec2.zip"])
+  etag   = filemd5(join("/", [var.HOME, "stop_ec2.zip"]))
 }
 
 resource "aws_lambda_function" "lambda" {
   role          = aws_iam_role.role.arn
   s3_bucket     = aws_s3_bucket.bucket.id
-  s3_key        = "stop_instances.zip"
+  s3_key        = "stop_ec2.zip"
   function_name = "lambda-fn"
   handler       = "stop_instances.lambda_handler"
   runtime       = "python3.6"
@@ -97,6 +98,9 @@ resource "aws_iam_policy" "policy" {
     {
             "Effect": "Allow",
             "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
                 "s3:ListAllMyBuckets",
                 "s3:GetBucketLocation"
             ],
@@ -104,10 +108,12 @@ resource "aws_iam_policy" "policy" {
         },
         {
             "Effect": "Allow",
-            "Action": "s3:*",
-            "Resource": [
-                "arn:aws:s3:::*"
-            ]
+            "Action": [
+              "s3:*",
+              "ec2:Stop*",
+              "ec2:DescribeInstances"
+            ],
+            "Resource": "*"
         }
   ]
 }

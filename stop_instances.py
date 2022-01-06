@@ -6,12 +6,8 @@ ec2 = boto3.resource('ec2', 'us-west-2')
 def lambda_handler(event, context):
   # Filters
   filters = [{
-      'Name': 'tag:AutoStop',
-      'Values': ['true']
-    },
-    {
-      'Name': 'instance-state-name', 
-      'Values': ['running']
+      'Name': 'tag:Name',
+      'Values': ['AutoStop']
     }
   ]
 
