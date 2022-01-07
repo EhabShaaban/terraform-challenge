@@ -70,8 +70,8 @@ resource "aws_s3_bucket_object" "object" {
   bucket = aws_s3_bucket.bucket.id
   key    = "stop_ec2.zip"
   acl    = "private"
-  source = join("/", [var.HOME, "stop_ec2.zip"])
-  etag   = filemd5(join("/", [var.HOME, "stop_ec2.zip"]))
+  source = "${path.module}/stop_ec2.zip"
+  etag   = filemd5("${path.module}/stop_ec2.zip")
 }
 
 resource "aws_lambda_function" "lambda" {
