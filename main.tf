@@ -26,11 +26,6 @@ variable "availability_zone" {
   description = "server availability zone"
 }
 
-variable "HOME" {
-  type        = string
-  description = "project home dir"
-}
-
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
   tags = {
