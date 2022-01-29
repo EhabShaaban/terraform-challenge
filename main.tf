@@ -146,12 +146,12 @@ resource "aws_api_gateway_rest_api" "rest" {
 resource "aws_api_gateway_resource" "stop" {
   rest_api_id = aws_api_gateway_rest_api.rest.id
   parent_id   = aws_api_gateway_rest_api.rest.root_resource_id
-  path_part   = "{proxy+}"
+  path_part   = "stop"
 }
 resource "aws_api_gateway_method" "stop" {
   rest_api_id   = aws_api_gateway_rest_api.rest.id
   resource_id   = aws_api_gateway_resource.stop.id
-  http_method   = "ANY"
+  http_method   = "POST"
   authorization = "NONE"
 }
 
