@@ -105,7 +105,8 @@ resource "aws_iam_policy" "policy" {
             "Action": [
               "s3:*",
               "ec2:Stop*",
-              "ec2:DescribeInstances"
+              "ec2:DescribeInstances",
+              "ec2:DescribeTags"
             ],
             "Resource": "*"
         }
@@ -140,7 +141,7 @@ resource "aws_iam_role_policy_attachment" "iam-policy-attach" {
 }
 
 resource "aws_api_gateway_rest_api" "rest" {
-  name = "Serverless"
+  name = "serverless"
 }
 
 resource "aws_api_gateway_method" "root" {
@@ -153,7 +154,7 @@ resource "aws_api_gateway_integration" "root" {
   rest_api_id             = aws_api_gateway_rest_api.rest.id
   resource_id             = aws_api_gateway_method.root.resource_id
   http_method             = aws_api_gateway_method.root.http_method
-  integration_http_method = "POST"
+  integration_http_method = "GET"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.lambda.invoke_arn
 }
@@ -166,7 +167,7 @@ resource "aws_api_gateway_resource" "stop" {
 resource "aws_api_gateway_method" "stop" {
   rest_api_id   = aws_api_gateway_rest_api.rest.id
   resource_id   = aws_api_gateway_resource.stop.id
-  http_method   = "POST"
+  http_method   = "GET"
   authorization = "NONE"
 }
 
@@ -174,7 +175,7 @@ resource "aws_api_gateway_integration" "stop_lambda" {
   rest_api_id             = aws_api_gateway_rest_api.rest.id
   resource_id             = aws_api_gateway_method.stop.resource_id
   http_method             = aws_api_gateway_method.stop.http_method
-  integration_http_method = "POST"
+  integration_http_method = "GET"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.lambda.invoke_arn
 }
