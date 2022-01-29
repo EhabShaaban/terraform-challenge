@@ -37,13 +37,12 @@ resource "aws_subnet" "subnet" {
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = var.availability_zone
-
   tags = {
     Name = "subnet"
   }
 }
 
-resource "aws_instance" "server" {
+resource "aws_instance" "instance" {
   ami               = "ami-0892d3c7ee96c0bf7"
   instance_type     = "t2.micro"
   availability_zone = var.availability_zone
@@ -51,7 +50,7 @@ resource "aws_instance" "server" {
 
   tags = {
     Owner   = "infra"
-    Name    = "AutoStop"
+    Name    = "auto stop"
     Project = "challenge accepted"
   }
 }
@@ -63,16 +62,16 @@ resource "aws_s3_bucket" "bucket" {
 
 resource "aws_s3_bucket_object" "object" {
   bucket = aws_s3_bucket.bucket.id
-  key    = "server.zip"
+  key    = "stop.zip"
   acl    = "private"
-  source = "${path.module}/server.zip"
-  etag   = filemd5("${path.module}/server.zip")
+  source = "${path.module}/stop.zip"
+  etag   = filemd5("${path.module}/stop.zip")
 }
 
 resource "aws_lambda_function" "lambda" {
   role          = aws_iam_role.role.arn
   s3_bucket     = aws_s3_bucket.bucket.id
-  s3_key        = "server.zip"
+  s3_key        = "stop.zip"
   function_name = "lambda-fn"
   handler       = "stop_instances.lambda_handler"
   runtime       = "python3.6"
@@ -144,46 +143,46 @@ resource "aws_api_gateway_rest_api" "rest" {
   name = "Serverless"
 }
 
-resource "aws_api_gateway_resource" "proxy" {
+resource "aws_api_gateway_resource" "stop" {
   rest_api_id = aws_api_gateway_rest_api.rest.id
   parent_id   = aws_api_gateway_rest_api.rest.root_resource_id
   path_part   = "{proxy+}"
 }
-resource "aws_api_gateway_method" "proxy" {
+resource "aws_api_gateway_method" "stop" {
   rest_api_id   = aws_api_gateway_rest_api.rest.id
-  resource_id   = aws_api_gateway_resource.proxy.id
+  resource_id   = aws_api_gateway_resource.stop.id
   http_method   = "ANY"
   authorization = "NONE"
 }
 
 resource "aws_api_gateway_integration" "lambda" {
   rest_api_id             = aws_api_gateway_rest_api.rest.id
-  resource_id             = aws_api_gateway_method.proxy.resource_id
-  http_method             = aws_api_gateway_method.proxy.http_method
+  resource_id             = aws_api_gateway_method.stop.resource_id
+  http_method             = aws_api_gateway_method.stop.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.lambda.invoke_arn
 }
 
-resource "aws_api_gateway_method" "proxy_root" {
+resource "aws_api_gateway_method" "root" {
   rest_api_id   = aws_api_gateway_rest_api.rest.id
   resource_id   = aws_api_gateway_rest_api.rest.root_resource_id
   http_method   = "ANY"
   authorization = "NONE"
 }
-resource "aws_api_gateway_integration" "lambda_root" {
+resource "aws_api_gateway_integration" "root" {
   rest_api_id             = aws_api_gateway_rest_api.rest.id
-  resource_id             = aws_api_gateway_method.proxy_root.resource_id
-  http_method             = aws_api_gateway_method.proxy_root.http_method
+  resource_id             = aws_api_gateway_method.root.resource_id
+  http_method             = aws_api_gateway_method.root.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.lambda.invoke_arn
 }
 
-resource "aws_api_gateway_deployment" "deploy_rest" {
+resource "aws_api_gateway_deployment" "deploy_stop" {
   depends_on = [
     aws_api_gateway_integration.lambda,
-    aws_api_gateway_integration.lambda_root,
+    aws_api_gateway_integration.root,
   ]
   rest_api_id = aws_api_gateway_rest_api.rest.id
   stage_name  = "stop"
@@ -199,10 +198,10 @@ resource "aws_lambda_permission" "apigw" {
   source_arn = "${aws_api_gateway_rest_api.rest.execution_arn}/*/*"
 }
 
-output "base_url" {
-  value = aws_api_gateway_deployment.deploy_rest.invoke_url
+output "stop" {
+  value = aws_api_gateway_deployment.deploy_stop.invoke_url
 }
 
-output "server_id" {
-  value = aws_instance.server.id
+output "instance_id" {
+  value = aws_instance.instance.id
 }
