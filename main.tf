@@ -62,16 +62,16 @@ resource "aws_s3_bucket" "bucket" {
 
 resource "aws_s3_bucket_object" "object" {
   bucket = aws_s3_bucket.bucket.id
-  key    = "stop.zip"
+  key    = "server.zip"
   acl    = "private"
-  source = "${path.module}/stop.zip"
-  etag   = filemd5("${path.module}/stop.zip")
+  source = "${path.module}/server.zip"
+  etag   = filemd5("${path.module}/server.zip")
 }
 
 resource "aws_lambda_function" "lambda" {
   role          = aws_iam_role.role.arn
   s3_bucket     = aws_s3_bucket.bucket.id
-  s3_key        = "stop.zip"
+  s3_key        = "server.zip"
   function_name = "lambda-fn"
   handler       = "stop_instances.lambda_handler"
   runtime       = "python3.6"
@@ -154,7 +154,7 @@ resource "aws_api_gateway_integration" "root" {
   rest_api_id             = aws_api_gateway_rest_api.rest.id
   resource_id             = aws_api_gateway_method.root.resource_id
   http_method             = aws_api_gateway_method.root.http_method
-  integration_http_method = "GET"
+  integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.lambda.invoke_arn
 }
@@ -175,7 +175,7 @@ resource "aws_api_gateway_integration" "stop_lambda" {
   rest_api_id             = aws_api_gateway_rest_api.rest.id
   resource_id             = aws_api_gateway_method.stop.resource_id
   http_method             = aws_api_gateway_method.stop.http_method
-  integration_http_method = "GET"
+  integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.lambda.invoke_arn
 }
@@ -196,7 +196,7 @@ resource "aws_api_gateway_integration" "tags_lambda" {
   rest_api_id             = aws_api_gateway_rest_api.rest.id
   resource_id             = aws_api_gateway_method.tags.resource_id
   http_method             = aws_api_gateway_method.tags.http_method
-  integration_http_method = "GET"
+  integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.lambda.invoke_arn
 }
