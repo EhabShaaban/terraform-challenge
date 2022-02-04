@@ -73,7 +73,7 @@ resource "aws_lambda_function" "lambda" {
   s3_bucket     = aws_s3_bucket.bucket.id
   s3_key        = "server.zip"
   function_name = "lambda-fn"
-  handler       = "stop_instances.lambda_handler"
+  handler       = "server.lambda_handler"
   runtime       = "python3.6"
   timeout       = 180
   depends_on = [
