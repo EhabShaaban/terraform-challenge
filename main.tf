@@ -165,6 +165,7 @@ resource "aws_api_gateway_resource" "stop" {
   path_part   = "stop"
 }
 resource "aws_api_gateway_method" "stop" {
+
   rest_api_id   = aws_api_gateway_rest_api.rest.id
   resource_id   = aws_api_gateway_resource.stop.id
   http_method   = "GET"
