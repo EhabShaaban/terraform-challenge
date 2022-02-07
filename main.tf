@@ -1,4 +1,11 @@
-# create terraform.tfvars with the following variables [access_key, secret_key, region, availability_zone]
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.74.0"
+    }
+  }
+}
 
 provider "aws" {
   access_key = var.access_key
@@ -6,24 +13,12 @@ provider "aws" {
   region     = var.region
 }
 
-variable "access_key" {
-  type        = string
-  description = "aws access key"
-}
-
-variable "secret_key" {
-  type        = string
-  description = "aws secret key"
-}
-
-variable "region" {
-  type        = string
-  description = "aws region"
-}
-
-variable "availability_zone" {
-  type        = string
-  description = "server availability zone"
+locals {
+  common_tags = {
+    Name    = "${var.name_tag_value}"
+    Owner   = "${var.owner_tag_value}"
+    Project = "${var.project_tag_value}"
+  }
 }
 
 resource "aws_vpc" "vpc" {
@@ -43,16 +38,12 @@ resource "aws_subnet" "subnet" {
 }
 
 resource "aws_instance" "instance" {
+  # Using Ubuntu Server 20.04 LTS (HVM), SSD Volume Type (64-bit x86)
   ami               = "ami-0892d3c7ee96c0bf7"
   instance_type     = "t2.micro"
   availability_zone = var.availability_zone
-  key_name          = "tf-challenge"
-
-  tags = {
-    Owner   = "infra"
-    Name    = "auto stop"
-    Project = "challenge accepted"
-  }
+  key_name          = var.key_pair
+  tags              = local.common_tags
 }
 
 resource "aws_s3_bucket" "bucket" {
@@ -138,107 +129,4 @@ EOF
 resource "aws_iam_role_policy_attachment" "iam-policy-attach" {
   role       = aws_iam_role.role.name
   policy_arn = aws_iam_policy.policy.arn
-}
-
-resource "aws_api_gateway_rest_api" "rest" {
-  name = "serverless"
-}
-
-resource "aws_api_gateway_method" "root" {
-  rest_api_id   = aws_api_gateway_rest_api.rest.id
-  resource_id   = aws_api_gateway_rest_api.rest.root_resource_id
-  http_method   = "ANY"
-  authorization = "NONE"
-}
-resource "aws_api_gateway_integration" "root" {
-  rest_api_id             = aws_api_gateway_rest_api.rest.id
-  resource_id             = aws_api_gateway_method.root.resource_id
-  http_method             = aws_api_gateway_method.root.http_method
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.lambda.invoke_arn
-}
-
-resource "aws_api_gateway_resource" "stop" {
-  rest_api_id = aws_api_gateway_rest_api.rest.id
-  parent_id   = aws_api_gateway_rest_api.rest.root_resource_id
-  path_part   = "stop"
-}
-resource "aws_api_gateway_method" "stop" {
-
-  rest_api_id   = aws_api_gateway_rest_api.rest.id
-  resource_id   = aws_api_gateway_resource.stop.id
-  http_method   = "GET"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "stop_lambda" {
-  rest_api_id             = aws_api_gateway_rest_api.rest.id
-  resource_id             = aws_api_gateway_method.stop.resource_id
-  http_method             = aws_api_gateway_method.stop.http_method
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.lambda.invoke_arn
-}
-
-resource "aws_api_gateway_resource" "tags" {
-  rest_api_id = aws_api_gateway_rest_api.rest.id
-  parent_id   = aws_api_gateway_rest_api.rest.root_resource_id
-  path_part   = "tags"
-}
-resource "aws_api_gateway_method" "tags" {
-  rest_api_id   = aws_api_gateway_rest_api.rest.id
-  resource_id   = aws_api_gateway_resource.tags.id
-  http_method   = "GET"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "tags_lambda" {
-  rest_api_id             = aws_api_gateway_rest_api.rest.id
-  resource_id             = aws_api_gateway_method.tags.resource_id
-  http_method             = aws_api_gateway_method.tags.http_method
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.lambda.invoke_arn
-}
-
-resource "aws_api_gateway_deployment" "deploy_stop" {
-  depends_on = [
-    aws_api_gateway_integration.stop_lambda,
-    aws_api_gateway_integration.root,
-  ]
-  rest_api_id = aws_api_gateway_rest_api.rest.id
-  stage_name  = "stop"
-}
-
-resource "aws_api_gateway_deployment" "deploy_tags" {
-  depends_on = [
-    aws_api_gateway_integration.tags_lambda,
-    aws_api_gateway_integration.root,
-  ]
-  rest_api_id = aws_api_gateway_rest_api.rest.id
-  stage_name  = "tags"
-}
-
-
-resource "aws_lambda_permission" "apigw" {
-  statement_id  = "AllowAPIGatewayInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.lambda.function_name
-  principal     = "apigateway.amazonaws.com"
-  # The "/*/*" portion grants access from any method on any resource
-  # within the API Gateway REST API.
-  source_arn = "${aws_api_gateway_rest_api.rest.execution_arn}/*/*"
-}
-
-output "stop" {
-  value = aws_api_gateway_deployment.deploy_stop.invoke_url
-}
-
-output "tags" {
-  value = aws_api_gateway_deployment.deploy_tags.invoke_url
-}
-
-output "instance_id" {
-  value = aws_instance.instance.id
 }
