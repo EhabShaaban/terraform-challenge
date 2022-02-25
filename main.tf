@@ -45,3 +45,25 @@ resource "aws_instance" "instance" {
   key_name          = var.key_pair
   tags              = local.common_tags
 }
+
+module "bucket" {
+  source        = "./modules/bucket"
+  bucket_prefix = "server-"
+  package_name  = "server.zip"
+}
+
+module "lambda" {
+  source        = "./modules/lambda"
+  bucket_id     = module.bucket.bucket_id
+  s3_key        = "server.zip"
+  function_name = "server-lambda"
+  depends_on = [
+    module.bucket
+  ]
+}
+
+module "apigw" {
+  source               = "./modules/apigw"
+  uri                  = module.lambda.invoke_arn
+  lambda_function_name = module.lambda.function_name
+}
