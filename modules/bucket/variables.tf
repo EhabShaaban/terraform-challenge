@@ -1,7 +1,8 @@
-variable "bucket_name" {
+variable "bucket_prefix" {
   type        = string
-  description = "Bucket name"
+  description = "Creates a unique bucket name beginning with server-"
 }
+
 
 variable "package_name" {
   type        = string

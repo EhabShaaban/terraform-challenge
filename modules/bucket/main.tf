@@ -1,6 +1,6 @@
 resource "aws_s3_bucket" "bucket" {
-  bucket = var.bucket_name
-  acl    = "private"
+  bucket_prefix = var.bucket_prefix
+  acl           = "private"
 }
 
 resource "aws_s3_bucket_object" "object" {
