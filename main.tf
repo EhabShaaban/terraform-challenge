@@ -48,7 +48,7 @@ resource "aws_instance" "instance" {
 
 module "bucket" {
   source        = "./modules/bucket"
-  bucket_prefix = "server-"
+  bucket_prefix = var.bucket_prefix
   package_name  = "server.zip"
 }
 

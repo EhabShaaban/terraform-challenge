@@ -38,3 +38,7 @@ variable "key_pair" {
   description = "server key pair"
 }
 
+variable "bucket_prefix" {
+  type        = string
+  description = "Creates a unique bucket name"
+}
