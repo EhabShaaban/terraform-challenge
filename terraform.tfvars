@@ -1,8 +1,0 @@
-access_key        = ""
-secret_key        = ""
-region            = ""
-availability_zone = ""
-name_tag_value    = ""
-owner_tag_value   = ""
-project_tag_value = ""
-key_pair          = ""

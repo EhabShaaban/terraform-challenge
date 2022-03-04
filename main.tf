@@ -8,9 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  access_key = var.access_key
-  secret_key = var.secret_key
-  region     = var.region
+  region = var.region
 }
 
 locals {
@@ -48,7 +46,7 @@ resource "aws_instance" "instance" {
 
 module "bucket" {
   source        = "./modules/bucket"
-  bucket_prefix = "server-"
+  bucket_prefix = var.bucket_prefix
   package_name  = "server.zip"
 }
 
