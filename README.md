@@ -32,14 +32,13 @@ Terraform script will do the following:
 - Create ec2 instance with default tags (You can change it from ```variables.tf```)
 - Create s3 bucket with python server
 - Deploy python server on lambda function
-- Create two api gateway endpoints to communicate with lambda
-  -```/stop``` will stop ec2 instance
-  -```/tags``` will get ec2 tags
-
+- Create two api gateway endpoints to communicate with lambda \
+```/stop``` will stop ec2 instance \
+```/tags``` will get ec2 tags
 ## Github Workflow
-On every push for main and develop will trigger ```test-infra``` it will run the test (Will be locked only for main) \
+On every push for main and develop will trigger ```test-infra``` it will run the test (Will be locked only for main)
 
-Environment variables are hooked up as secret like the following:
+Environment variables are hooked up as secrets like the following:
 ```
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
