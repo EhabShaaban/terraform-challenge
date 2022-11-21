@@ -1,12 +1,12 @@
 variable "region" {
   type        = string
-  default     = "us-west-2"
+  default     = "eu-west-3"
   description = "aws region"
 }
 
 variable "availability_zone" {
   type        = string
-  default     = "us-west-2a"
+  default     = "eu-west-3a"
   description = "server availability zone"
 }
 

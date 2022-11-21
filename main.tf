@@ -37,7 +37,7 @@ resource "aws_subnet" "subnet" {
 
 resource "aws_instance" "instance" {
   # Using Ubuntu Server 20.04 LTS (HVM), SSD Volume Type (64-bit x86)
-  ami               = "ami-0892d3c7ee96c0bf7"
+  ami               = "ami-0493936afbe820b28"
   instance_type     = "t2.micro"
   availability_zone = var.availability_zone
   key_name          = var.key_pair

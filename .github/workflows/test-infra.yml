@@ -1,9 +1,6 @@
 name: Setup Infrastructure
-on:
-  push:
-    branches:
-      - main
-      - develop
+on: pull_request
+
 jobs:
   test-infra:
     runs-on: ubuntu-latest

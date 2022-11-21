@@ -92,7 +92,7 @@ func TestingAPIGateway(t *testing.T, terraformOpts *terraform.Options) {
 
 // Wrapper function to prepare the infrastructure, terratest, and terraform variables
 func TestInfrastructure(t *testing.T) {
-	awsRegion := "us-west-2"
+	awsRegion := "eu-west-3"
 	NameTag := "auto stop"
 	OwnerTag := "infra"
 
