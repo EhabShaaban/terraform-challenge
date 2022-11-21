@@ -1,7 +1,7 @@
 import boto3
 import json
 
-ec2 = boto3.resource('ec2', 'us-west-2')
+ec2 = boto3.resource('ec2', 'eu-west-3')
 
 
 def lambda_handler(event, context):
